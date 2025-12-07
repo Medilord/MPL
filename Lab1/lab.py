@@ -41,8 +41,54 @@ def generateFile(FileName: str):
 
 
 def processCSV(FileName: str):
-
+    data = {
+        'A':[],
+        'B':[],
+        'C':[],
+        'D':[]
+    }
+    dataframe = pandas.read_csv(FileName)
+    for index, row in dataframe.iterrows:
+        data[row['Letter']].append(row['Value'])
+    Medians = {
+        'A':[],
+        'B':[],
+        'C':[],
+        'D':[]
+    }
+    Deviation = {
+        'A':[],
+        'B':[],
+        'C':[],
+        'D':[]
+    }
     
+    for Let in ['A', 'B', 'C', 'D']:
+        length = len(data[Let])
+        list = data[Let]
+        list.sort()
+        if(length > 1):
+            if((length % 2) == 0):
+                median = list[(length // 2)]
+            else:
+                median = list[(length // 2) + 1]
+        elif (length == 1):
+            median = list[0]
+        else:
+            median = -1
+        
+        Medians[Let] = median
+        for num in data[Let]:
+            
+
+
+    print(f"Файл {FileName}: \nA: {Medians['A']}, {Deviation['A']} \n\
+    B: {Medians['B']}, {Deviation['B']} \n\
+    C: {Medians['C']}, {Deviation['C']} \n\
+    D: {Medians['D']}, {Deviation['D']}\n")
+
+
+            
 
     return
 
