@@ -18,7 +18,7 @@
 
 
 
-
+from concurrent.futures import ProcessPoolExecutor
 import random
 import pandas
 
@@ -47,50 +47,113 @@ def processCSV(FileName: str):
         'C':[],
         'D':[]
     }
+    result = {
+        'Letter':[],
+        'Median':[],
+        'Dispersion':[]
+    }
     dataframe = pandas.read_csv(FileName)
-    for index, row in dataframe.iterrows:
+    for index, row in dataframe.iterrows():
         data[row['Letter']].append(row['Value'])
+
+    
+    for Let in data.keys():
+        length = len(data[Let])
+        list = data[Let]
+        list.sort()
+        if(length > 1):
+            if((length % 2) == 0):
+                median = (list[(length // 2) - 1] + list[length // 2]) / 2
+            else:
+                median = list[length // 2]
+        elif (length == 1):
+            median = list[0]
+        else:
+            median = -1
+        
+        Mean = sum(list)/length
+        SumDispersionSquares = 0
+
+        for num in list:
+            SumDispersionSquares += (num - Mean) ** 2
+        dispersion = (SumDispersionSquares/length) ** 0.5
+
+        if (median != -1):
+            result['Letter'].append(Let)
+            result['Median'].append(median)
+            result['Dispersion'].append(dispersion)
+            
+    return result
+
+def processMedians(results: list[dict]):
     Medians = {
         'A':[],
         'B':[],
         'C':[],
         'D':[]
     }
-    Deviation = {
-        'A':[],
-        'B':[],
-        'C':[],
-        'D':[]
+    result = {
+        'Letter':[],
+        'ResMedian':[],
+        'ResDispersion':[]
     }
+
+    for res in results:
+        for let, median in zip(res['Letter'], res['Median']):
+            Medians[let].append(median)
     
-    for Let in ['A', 'B', 'C', 'D']:
-        length = len(data[Let])
-        list = data[Let]
+    for Let in Medians.keys():
+        length = len(Medians[Let])
+        list = Medians[Let]
         list.sort()
         if(length > 1):
             if((length % 2) == 0):
-                median = list[(length // 2)]
+                median = (list[(length // 2) - 1] + list[length // 2]) / 2
             else:
-                median = list[(length // 2) + 1]
+                median = list[length // 2]
         elif (length == 1):
             median = list[0]
         else:
             median = -1
+
+        Mean = sum(list)/length
+        SumDispersionSquares = 0
+
+        for num in list:
+            SumDispersionSquares += (num - Mean) ** 2
+        dispersion = (SumDispersionSquares/length) ** 0.5
+
+        if (median != -1):
+            result['Letter'].append(Let)
+            result['ResMedian'].append(median)
+            result['ResDispersion'].append(dispersion)
+
+    return result
+
+
+if __name__ == "__main__":
+
+    FileNames = []
+    for i in range(1, 6):
+        name = "file_" + str(i) + ".csv"
+        FileNames.append(name)
+        generateFile(name)
+
+    with ProcessPoolExecutor() as PPE:
+        results = list(PPE.map(processCSV, FileNames))
+
+    print("____Результаты обработки____")
+
+    for i, result in enumerate(results, 0):
+        print(("\nФайл: " + FileNames[i]))
+        dataframe = pandas.DataFrame(result)
+        print(dataframe.to_string(index=False))
+
         
-        Medians[Let] = median
-        for num in data[Let]:
-            
+
+    finalResult = processMedians(results)
 
 
-    print(f"Файл {FileName}: \nA: {Medians['A']}, {Deviation['A']} \n\
-    B: {Medians['B']}, {Deviation['B']} \n\
-    C: {Medians['C']}, {Deviation['C']} \n\
-    D: {Medians['D']}, {Deviation['D']}\n")
-
-
-            
-
-    return
-
-
-generateFile("test")
+    print("____Финальные результаты____")
+    dataframe = pandas.DataFrame(finalResult)
+    print(dataframe.to_string(index=False))
